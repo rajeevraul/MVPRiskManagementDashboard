@@ -7,10 +7,12 @@ import plotly.express as px
 import requests
 import streamlit as st
 
-from app.core.config import DASHBOARD_REFRESH_SECONDS
-
 ROOT_DIR = Path(__file__).resolve().parents[2]
 sys.path.append(str(ROOT_DIR))
+
+from app.core.config import DASHBOARD_REFRESH_SECONDS
+
+
 
 st.set_page_config(
     page_title="Risk Management Dashboard",
