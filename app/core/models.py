@@ -54,6 +54,14 @@ class Position(BaseModel):
     @property
     def total_pnl(self) -> float:
         return self.realized_pnl + self.unrealized_pnl
+    
+class ClientRisk(BaseModel):
+    client_id: str
+    positions: dict[str, float] = Field(default_factory=dict)
+    gross_exposure: float = 0.0
+    net_exposure: float = 0.0
+    unrealized_pnl: float = 0.0
+    alert_status: str = "NORMAL"
 
 
 class DashboardSnapshot(BaseModel):

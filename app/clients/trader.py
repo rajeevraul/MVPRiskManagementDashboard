@@ -5,20 +5,33 @@ from app.core.models import PriceTick, Trade, TradeSide
 
 
 class ClientTrader:
-    """
-    Mock client trading engine.
-
-    Clients see our bid/ask prices and occasionally trade.
-    If client buys, we sell to them.
-    If client sells, we buy from them.
-    """
-
     def __init__(self) -> None:
         self.clients = {
-            "ALPHA_CAPITAL": {"activity": 0.45, "size_multiplier": 1.5},
-            "NOVA_TRADING": {"activity": 0.30, "size_multiplier": 1.0},
-            "ORBIT_FUND": {"activity": 0.20, "size_multiplier": 0.8},
-            "RETAIL_FLOW": {"activity": 0.60, "size_multiplier": 0.3},
+            "ALPHA_CAPITAL": {
+                "activity": 0.45,
+                "max_order_size": 500,
+                "bias": "aggressive",
+            },
+            "NOVA_TRADING": {
+                "activity": 0.35,
+                "max_order_size": 350,
+                "bias": "balanced",
+            },
+            "ORBIT_FUND": {
+                "activity": 0.25,
+                "max_order_size": 250,
+                "bias": "mean_reversion",
+            },
+            "RETAIL_FLOW": {
+                "activity": 0.65,
+                "max_order_size": 80,
+                "bias": "random",
+            },
+            "APEX_HEDGE": {
+                "activity": 0.30,
+                "max_order_size": 400,
+                "bias": "momentum",
+            },
         }
 
     def generate_trades(self, prices: list[PriceTick]) -> list[Trade]:
@@ -29,12 +42,9 @@ class ClientTrader:
                 if random.random() > profile["activity"]:
                     continue
 
-                side = random.choice([TradeSide.BUY, TradeSide.SELL])
-
-                # Client buys at our ask, client sells at our bid
+                side = self._choose_side(profile["bias"])
                 execution_price = tick.ask if side == TradeSide.BUY else tick.bid
-
-                quantity = random.randint(10, 200) * profile["size_multiplier"]
+                quantity = random.randint(10, int(profile["max_order_size"]))
 
                 trades.append(
                     Trade(
@@ -48,3 +58,24 @@ class ClientTrader:
                 )
 
         return trades
+
+    def _choose_side(self, bias: str) -> TradeSide:
+        if bias == "aggressive":
+            return random.choices(
+                [TradeSide.BUY, TradeSide.SELL],
+                weights=[0.6, 0.4],
+            )[0]
+
+        if bias == "mean_reversion":
+            return random.choices(
+                [TradeSide.BUY, TradeSide.SELL],
+                weights=[0.45, 0.55],
+            )[0]
+
+        if bias == "momentum":
+            return random.choices(
+                [TradeSide.BUY, TradeSide.SELL],
+                weights=[0.55, 0.45],
+            )[0]
+
+        return random.choice([TradeSide.BUY, TradeSide.SELL])
